@@ -19,7 +19,7 @@ the record the harness produced before the seam existed.
 """
 
 from .detect import detect
-from .judgment import recovery_request, severity_request, trusted
+from .judgment import check_answer, recovery_request, severity_request, trusted
 from .ladder import apply_rung, next_rung
 from .trace import Event, Trace
 
@@ -149,7 +149,9 @@ def run_session(scenario_name, judgments=None):
         ]
         if not segment:
             return
-        response = judgments.judge("recovery", recovery_request(record, segment))
+        response = check_answer(
+            "recovery", judgments.judge("recovery", recovery_request(record, segment))
+        )
         if trusted(response):
             record["recovery"] = response["choice"]
 
@@ -185,7 +187,9 @@ def run_session(scenario_name, judgments=None):
         assess_recovery(step)
         severity = None
         if judgments is not None:
-            answer = judgments.judge("severity", severity_request(detection))
+            answer = check_answer(
+                "severity", judgments.judge("severity", severity_request(detection))
+            )
             if trusted(answer):
                 severity = answer["score"]
         record = apply_rung(

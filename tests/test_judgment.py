@@ -99,6 +99,66 @@ def test_validator_refuses_a_confidence_outside_the_unit_interval():
         validate_fixture(pair, source="mutant")
 
 
+def test_validator_refuses_a_score_response_carrying_a_choice_field():
+    pair = committed_pair("severity-loop-needs-sharper-opening.json")
+    pair["response"]["choice"] = "recovering"
+    with pytest.raises(JudgmentError):
+        validate_fixture(pair, source="mutant")
+
+
+def test_validator_refuses_an_abstention_carrying_a_choice_and_a_score():
+    pair = committed_pair("severity-fixation-clears-on-nudge.json")
+    pair["response"] = {
+        "kind": "abstention",
+        "choice": "recovering",
+        "score": 0.9,
+        "confidence": 0.99,
+    }
+    with pytest.raises(JudgmentError):
+        validate_fixture(pair, source="mutant")
+
+
+class _StubSource:
+    def __init__(self, answers):
+        self._answers = answers
+
+    def judge(self, point, request):
+        return self._answers.get(point)
+
+
+def test_a_malformed_foreign_answer_counts_as_no_judgment():
+    stub = _StubSource(
+        {
+            "severity": {"kind": "score", "confidence": 0.9},
+            "recovery": {"kind": "choice", "confidence": 0.95},
+        }
+    )
+    judged = run_session("loop-needs-sharper", judgments=stub)
+    plain = run_session("loop-needs-sharper")
+    assert judged == plain
+
+
+def test_a_wrong_kind_foreign_answer_counts_as_no_judgment():
+    stub = _StubSource(
+        {
+            "severity": {
+                "kind": "choice",
+                "choice": "recovering",
+                "confidence": 1.0,
+                "probabilities": {
+                    "recovering": 1.0,
+                    "still_stalled": 0.0,
+                    "getting_worse": 0.0,
+                },
+            },
+            "recovery": {"kind": "score", "score": 0.5, "confidence": 1.0},
+        }
+    )
+    judged = run_session("loop-needs-sharper", judgments=stub)
+    plain = run_session("loop-needs-sharper")
+    assert judged == plain
+
+
 def test_validator_refuses_a_fixture_not_marked_synthetic():
     pair = committed_pair("severity-loop-needs-sharper-opening.json")
     pair["synthetic"] = False

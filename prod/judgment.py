@@ -103,10 +103,28 @@ def _validate_recovery_request(source, request):
         previous = step
 
 
+_FIELDS_FOR_KIND = {
+    "abstention": {"kind"},
+    "score": {"kind", "score", "confidence"},
+    "choice": {"kind", "choice", "confidence", "probabilities"},
+}
+
+
 def _validate_response(source, point, response):
     if not isinstance(response, dict):
         _fail(source, "response is not an object")
     kind = response.get("kind")
+    if kind in _FIELDS_FOR_KIND:
+        extra = set(response) - _FIELDS_FOR_KIND[kind]
+        if extra:
+            _fail(
+                source,
+                "response carries the field "
+                + repr(sorted(extra)[0])
+                + ", which a "
+                + kind
+                + " response does not carry",
+            )
     if kind == "abstention":
         return
     expected = _KIND_FOR_POINT[point]
@@ -216,6 +234,23 @@ class FixturePlayer:
         if response is None:
             return None
         return json.loads(json.dumps(response))
+
+
+def check_answer(point, response):
+    """The answer itself when it is well formed for its point, else None.
+
+    A judgment source that is not the fixture player can hand back
+    anything. An answer outside the recorded shape for its point is
+    treated as no judgment at all, never trusted and never recorded,
+    so a malformed answer cannot crash the session or reach a record.
+    """
+    if response is None:
+        return None
+    try:
+        _validate_response("answer", point, response)
+    except JudgmentError:
+        return None
+    return response
 
 
 def trusted(response):

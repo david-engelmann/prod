@@ -5,6 +5,7 @@ from .judgment import (
     CONFIDENCE_THRESHOLD,
     FixturePlayer,
     JudgmentError,
+    check_answer,
     trusted,
     validate_fixture,
 )
