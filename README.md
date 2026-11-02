@@ -8,7 +8,7 @@ Everything else in fleet tooling either waits forever or kills, and stopping a r
 
 ## Status
 
-Round 1 is built and in review. The detectors, the first two ladder rungs, and the sandbox harness are in place against the Round 1 contract. Closed rounds 0 of 100. Part of the impatient programming portfolio, in the Fleet Operations arc.
+Closed rounds 1 of 100. Round 1 landed in PR 2 and is recorded closed here. The detectors for looping and tool fixation, the first two ladder rungs with the escalation order enforced at every entry point, and the scripted sandbox harness are in place under contract obligations PR-1 to PR-18. The round closed after the independent red team, the two-axis review, the CodeRabbit pass, and the fixes for every finding they raised. Part of the impatient programming portfolio, in the Fleet Operations arc.
 
 ## Licence
 
