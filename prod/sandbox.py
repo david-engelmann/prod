@@ -100,6 +100,13 @@ SCENARIOS = {
         _RECOVERY,
         ("sharper_prompt",),
     ),
+    "loop-needs-subtask": _scenario(
+        "loop-needs-subtask",
+        "Find the config file and report its path",
+        _LOOP_STALL,
+        _RECOVERY,
+        ("smaller_subtask",),
+    ),
     "fixation-clears-on-nudge": _scenario(
         "fixation-clears-on-nudge",
         "Find the config file and report its path",

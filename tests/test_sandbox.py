@@ -39,11 +39,21 @@ def test_fixation_scenario_is_rescued_by_nudge():
     assert [i["rung"] for i in record["interventions"]] == ["nudge"]
 
 
-def test_agent_that_ignores_both_rungs_ends_stalled_with_both_recorded():
+# Round 4 alteration. This pin asserted the ignoring agent ends with
+# the two Round 1 rungs on its timeline. PR-32 extends the same
+# outcome over the third rung the ladder gained, so the timeline now
+# records all three rungs in order. The claim the pin carries, that
+# an agent ignoring every rung ends stalled with every rung tried,
+# is unchanged.
+def test_agent_that_ignores_every_rung_ends_stalled_with_all_recorded():
     record = run_session("loop-never-clears")
     assert record["stall_cleared"] is False
     assert record["outcome"] == "stalled"
-    assert [i["rung"] for i in record["interventions"]] == ["nudge", "sharper_prompt"]
+    assert [i["rung"] for i in record["interventions"]] == [
+        "nudge",
+        "sharper_prompt",
+        "smaller_subtask",
+    ]
 
 
 def test_intervention_records_name_the_rung_and_the_firing_detection():
