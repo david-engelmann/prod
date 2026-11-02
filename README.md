@@ -8,7 +8,7 @@ Everything else in fleet tooling either waits forever or kills, and stopping a r
 
 ## Status
 
-Closed rounds 1 of 100. Round 1 landed in PR 2 and is recorded closed here. Round 2 is built and in review. The fixation detector now reports one detection per dominant tool in a window, and the decision model fixture seam stands behind the ladder under contract obligations PR-1 to PR-26. The seam is recorded fixtures and a fixture player only, built and tested offline with no live calls, and the detectors and the ladder behave exactly as they did in Round 1 wherever no trusted judgment answers. Part of the impatient programming portfolio, in the Fleet Operations arc.
+Closed rounds 2 of 100. Round 2 landed in PR 5 and is recorded closed here. The fixation detector now reports one detection per dominant tool in a window, and the decision model fixture seam stands behind the ladder under contract obligations PR-1 to PR-26. The seam is recorded fixtures and a fixture player only, built and tested offline with no live calls, and the detectors and the ladder behave exactly as they did in Round 1 wherever no trusted judgment answers. Part of the impatient programming portfolio, in the Fleet Operations arc.
 
 ## Licence
 
