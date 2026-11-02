@@ -83,3 +83,16 @@ def test_a_pattern_beginning_inside_a_reported_match_is_never_reported():
     found = looping(events)
     assert len(found) == 1
     assert found[0]["evidence_span"] == {"start_step": 0, "end_step": 3}
+
+
+def test_a_pattern_inside_a_reported_span_is_reported_only_by_its_tail():
+    p = "read(path=src/b.py)"
+    q = "read(path=src/c.py)"
+    calls = [p, q, p, q, q, q, q]
+    events = [ev(i, "read", call) for i, call in enumerate(calls)]
+    found = looping(events)
+    assert len(found) == 2
+    assert found[0]["pattern"] == [p, q]
+    assert found[0]["evidence_span"] == {"start_step": 0, "end_step": 3}
+    assert found[1]["pattern"] == [q]
+    assert found[1]["evidence_span"] == {"start_step": 4, "end_step": 6}

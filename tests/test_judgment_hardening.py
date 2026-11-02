@@ -1,6 +1,5 @@
 """PR-27. The judgment seam hardening against malformed answers."""
 
-import copy
 import json
 import pathlib
 
@@ -123,6 +122,23 @@ def test_a_non_finite_number_is_not_a_number_for_the_seam():
     answer = {"kind": "score", "score": 0.5, "confidence": float("nan")}
     assert check_answer("severity", answer) is None
     assert not trusted(answer)
+    infinite = {"kind": "score", "score": 0.5, "confidence": float("inf")}
+    assert check_answer("severity", infinite) is None
+    assert not trusted(infinite)
+    huge = {"kind": "score", "score": 0.5, "confidence": HUGE}
+    assert check_answer("severity", huge) is None
+    assert not trusted(huge)
+
+
+def test_extra_fields_of_mixed_types_are_refused_without_a_comparison_error():
+    pair = committed_pair("severity-loop-needs-sharper-opening.json")
+    pair["response"][123] = "x"
+    pair["response"]["zzz"] = 1
+    with pytest.raises(JudgmentError):
+        validate_fixture(pair, source="mutant")
+    answer = {"kind": "score", "score": 0.5, "confidence": 0.9, 123: "x", "zzz": 1}
+    assert check_answer("severity", answer) is None
+    assert check_answer("recovery", answer) is None
 
 
 def test_an_extra_envelope_field_refuses_at_load_naming_it(tmp_path):
