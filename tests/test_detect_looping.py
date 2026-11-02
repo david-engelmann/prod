@@ -29,6 +29,37 @@ def test_two_call_cycle_repeated_is_detected():
     assert looping[0]["evidence_span"] == {"start_step": 0, "end_step": 5}
 
 
+def test_two_looping_spans_in_one_window_are_both_reported():
+    events = [
+        ev(0, "grep", "grep(pattern=a, path=src)"),
+        ev(1, "grep", "grep(pattern=a, path=src)"),
+        ev(2, "grep", "grep(pattern=a, path=src)"),
+        ev(3, "read", "read(path=src/x.py)"),
+        ev(4, "read", "read(path=src/x.py)"),
+        ev(5, "read", "read(path=src/x.py)"),
+    ]
+    looping = [x for x in detect(make_trace(events)) if x["shape"] == "looping"]
+    assert len(looping) == 2
+    assert looping[0]["evidence_span"] == {"start_step": 0, "end_step": 2}
+    assert looping[1]["evidence_span"] == {"start_step": 3, "end_step": 5}
+
+
+def test_three_call_cycle_repeated_is_detected():
+    calls = ["open(path=a)", "open(path=b)", "open(path=c)"] * 2
+    events = [ev(i, "read", call) for i, call in enumerate(calls)]
+    looping = [x for x in detect(make_trace(events)) if x["shape"] == "looping"]
+    assert len(looping) == 1
+    assert looping[0]["evidence_span"] == {"start_step": 0, "end_step": 5}
+
+
+def test_four_call_cycle_repeated_is_detected():
+    calls = ["open(path=a)", "open(path=b)", "open(path=c)", "open(path=d)"] * 2
+    events = [ev(i, "read", call) for i, call in enumerate(calls)]
+    looping = [x for x in detect(make_trace(events)) if x["shape"] == "looping"]
+    assert len(looping) == 1
+    assert looping[0]["evidence_span"] == {"start_step": 0, "end_step": 7}
+
+
 def test_two_identical_calls_are_not_a_loop():
     events = [
         ev(0, "grep", "grep(pattern=config, path=src)"),

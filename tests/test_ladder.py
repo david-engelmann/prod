@@ -143,6 +143,23 @@ def test_history_record_missing_fired_by_is_refused_with_the_field_named():
     assert "fired_by" in str(excinfo.value)
 
 
+def test_history_record_with_an_unhashable_rung_is_refused_with_the_field_named():
+    record = apply_rung("nudge", DETECTION, GOAL, at_step=4, history=[])
+    broken = dict(record, rung=[])
+    with pytest.raises(LadderError) as excinfo:
+        apply_rung("sharper_prompt", DETECTION, GOAL, at_step=9, history=[broken])
+    assert "rung" in str(excinfo.value)
+
+
+def test_history_fired_by_missing_a_field_is_refused_with_the_field_named():
+    record = apply_rung("nudge", DETECTION, GOAL, at_step=4, history=[])
+    for field in ("trace_id", "evidence_span"):
+        broken = dict(record, fired_by={k: v for k, v in record["fired_by"].items() if k != field})
+        with pytest.raises(LadderError) as excinfo:
+            apply_rung("sharper_prompt", DETECTION, GOAL, at_step=9, history=[broken])
+        assert field in str(excinfo.value)
+
+
 def test_malformed_records_never_surface_as_a_bare_key_error():
     with pytest.raises(LadderError):
         apply_rung("nudge", {"shape": "looping"}, GOAL, at_step=4, history=[])

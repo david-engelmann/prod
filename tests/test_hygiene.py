@@ -26,6 +26,8 @@ FORBIDDEN_IMPORTS = {
 # module the package is otherwise allowed to import.
 FORBIDDEN_ATTRIBUTES = {
     ("os", "environ"),
+    ("os", "popen"),
+    ("os", "system"),
     ("time", "time"),
 }
 
@@ -79,6 +81,11 @@ def test_package_has_no_network_wall_clock_or_randomness_capabilities():
 def test_prose_mentioning_randomness_is_not_a_forbidden_use():
     source = '"""A harness where nothing is left to randomness."""\n\nVALUE = 1\n'
     assert forbidden_uses(source) == []
+
+
+def test_os_system_and_popen_are_forbidden_uses():
+    assert forbidden_uses("import os\nos.system('curl example')\n") == ["os.system"]
+    assert forbidden_uses("import os\nos.popen('curl example')\n") == ["os.popen"]
 
 
 def test_a_real_random_import_is_a_forbidden_use():

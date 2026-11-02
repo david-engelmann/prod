@@ -54,7 +54,7 @@ def _detection(trace, shape, pattern, first, last, detail):
     }
 
 
-def _looping_in_window(trace, first, last):
+def _first_loop_match(trace, first, last):
     calls = [event.call for event in trace.events[first : last + 1]]
     for offset in range(len(calls)):
         for length in range(1, CYCLE_MAX_LENGTH + 1):
@@ -76,8 +76,21 @@ def _looping_in_window(trace, first, last):
                     + str(repeats)
                     + " times with no progress"
                 )
-                return _detection(trace, "looping", pattern, first + offset, end, detail)
+                return _detection(trace, "looping", pattern, first + offset, end, detail), end
     return None
+
+
+def _looping_in_window(trace, first, last):
+    found = []
+    start = first
+    while start <= last:
+        match = _first_loop_match(trace, start, last)
+        if match is None:
+            break
+        detection, end = match
+        found.append(detection)
+        start = end + 1
+    return found
 
 
 def _unused_available(trace, positions_by_tool, start, end):
@@ -193,9 +206,7 @@ def detect(trace, from_step=0):
     )
     found = []
     for first, last in _stall_windows(view.events):
-        looping = _looping_in_window(view, first, last)
-        if looping is not None:
-            found.append(looping)
+        found.extend(_looping_in_window(view, first, last))
         fixation = _fixation_in_window(view, first, last)
         if fixation is not None:
             found.append(fixation)

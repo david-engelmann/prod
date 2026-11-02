@@ -54,12 +54,14 @@ def _validate_history_record(record):
         raise LadderError("history record is not an object")
     if "rung" not in record:
         raise LadderError("history record is missing field 'rung'")
+    if not isinstance(record["rung"], str):
+        raise LadderError("history record field 'rung' is not a string")
     if "fired_by" not in record:
         raise LadderError("history record is missing field 'fired_by'")
     fired_by = record["fired_by"]
     if not isinstance(fired_by, dict):
         raise LadderError("history record field 'fired_by' is not an object")
-    for field in ("shape", "pattern"):
+    for field in _DETECTION_FIELDS:
         if field not in fired_by:
             raise LadderError(
                 "history record fired_by is missing field '" + field + "'"
