@@ -1,0 +1,20 @@
+{
+  "judgment_point": "severity",
+  "request": {
+    "evidence_span": {
+      "end_step": 5,
+      "start_step": 3
+    },
+    "pattern": [
+      "grep(pattern=config, path=src)"
+    ],
+    "shape": "looping",
+    "trace_id": "sandbox-loop-needs-sharper"
+  },
+  "response": {
+    "confidence": 0.42,
+    "kind": "score",
+    "score": 0.91
+  },
+  "synthetic": true
+}

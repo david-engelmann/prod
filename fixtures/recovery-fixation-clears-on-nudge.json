@@ -1,0 +1,35 @@
+{
+  "judgment_point": "recovery",
+  "request": {
+    "events": [
+      {
+        "call": "read(path=src/config.py)",
+        "progress": true,
+        "step": 4,
+        "tool": "read"
+      },
+      {
+        "call": "test(target=config)",
+        "progress": true,
+        "step": 5,
+        "tool": "test"
+      },
+      {
+        "call": "finish(summary=config located)",
+        "progress": true,
+        "step": 6,
+        "tool": "finish"
+      }
+    ],
+    "pattern": [
+      "grep"
+    ],
+    "rung": "nudge",
+    "shape": "tool_fixation",
+    "trace_id": "sandbox-fixation-clears-on-nudge"
+  },
+  "response": {
+    "kind": "abstention"
+  },
+  "synthetic": true
+}

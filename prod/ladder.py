@@ -108,12 +108,15 @@ def _enforce_order(rung, detection, history):
         )
 
 
-def build_intervention(rung, detection, goal, at_step, history=()):
+def build_intervention(rung, detection, goal, at_step, history=(), severity=None):
     """The recorded intervention for one rung firing on one detection.
 
     The escalation order is enforced against history, which defaults
     to an empty session, so a nudge can be built with no history and
-    a sharper prompt built with no nudge on record is refused.
+    a sharper prompt built with no nudge on record is refused. A
+    trusted severity score handed in by the caller is recorded on
+    the record under the name severity and changes nothing else
+    about it.
     """
     _enforce_order(rung, detection, history)
     if rung == "nudge":
@@ -134,7 +137,7 @@ def build_intervention(rung, detection, goal, at_step, history=()):
             + goal
             + ". Take a different first step toward it now."
         )
-    return {
+    record = {
         "rung": rung,
         "fired_by": {
             "trace_id": detection["trace_id"],
@@ -145,8 +148,11 @@ def build_intervention(rung, detection, goal, at_step, history=()):
         "message": message,
         "at_step": at_step,
     }
+    if severity is not None:
+        record["severity"] = severity
+    return record
 
 
-def apply_rung(rung, detection, goal, at_step, history):
+def apply_rung(rung, detection, goal, at_step, history, severity=None):
     """Build an intervention while enforcing the escalation order."""
-    return build_intervention(rung, detection, goal, at_step, history)
+    return build_intervention(rung, detection, goal, at_step, history, severity=severity)
