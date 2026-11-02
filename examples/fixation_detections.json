@@ -1,0 +1,17 @@
+{
+  "detections": [
+    {
+      "detail": "tool grep made 4 of 4 calls with no progress while read, edit, test, finish went unused",
+      "evidence_span": {
+        "end_step": 3,
+        "start_step": 0
+      },
+      "pattern": [
+        "grep"
+      ],
+      "shape": "tool_fixation",
+      "trace_id": "trace-fixation-001"
+    }
+  ],
+  "trace_id": "trace-fixation-001"
+}

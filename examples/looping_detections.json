@@ -1,0 +1,17 @@
+{
+  "detections": [
+    {
+      "detail": "call pattern of length 1 repeated 4 times with no progress",
+      "evidence_span": {
+        "end_step": 4,
+        "start_step": 1
+      },
+      "pattern": [
+        "grep(pattern=config, path=src)"
+      ],
+      "shape": "looping",
+      "trace_id": "trace-loop-001"
+    }
+  ],
+  "trace_id": "trace-loop-001"
+}
