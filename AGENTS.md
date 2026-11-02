@@ -59,3 +59,5 @@ This repo is prod. Its contract lives in CONTRACT.md and that file is the spec f
 Boundary. Prod rescues automatically on its graded ladder. Cavalry, also owned by this chat, records the rescues only a human could make, and prod never writes that record. Deadman, owned by another chat, is the last rung both point at, and prod never reimplements that switch.
 
 First slice. Stall detectors for two failure shapes, looping and tool fixation, plus the first two ladder rungs, nudge and sharper prompt, exercised only against test agents in local sandboxes and never against a live fleet.
+
+Identity exception. The maintainer identity in the required Signed-off-by trailer is the repo owner's public sign-off identity. It is permitted in commit metadata and in that instruction, and the sanitization rule does not apply to it.

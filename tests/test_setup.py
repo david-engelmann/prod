@@ -36,7 +36,9 @@ def test_agents_canonical_block_present():
 
 def test_readme_status_reports_rounds():
     text = (ROOT / "README.md").read_text()
-    assert "0 of 100" in text
+    assert re.search(r"Closed rounds 0 of 100(?!\d)", text), (
+        "README status must report closed rounds 0 of 100 exactly"
+    )
 
 
 def test_no_em_or_en_dash_in_text_files():
@@ -44,7 +46,10 @@ def test_no_em_or_en_dash_in_text_files():
     for p in ROOT.rglob("*"):
         if not p.is_file() or p.suffix not in TEXT_SUFFIXES:
             continue
-        if any(part in {".git", ".pytest_cache", "__pycache__"} for part in p.relative_to(ROOT).parts):
+        rel_parts = p.relative_to(ROOT).parts
+        if ".git" in rel_parts or ".pytest_cache" in rel_parts or "__pycache__" in rel_parts:
+            continue
+        if rel_parts and rel_parts[0] in {".venv", "venv", "node_modules", ".tox"}:
             continue
         t = p.read_text()
         if "\u2014" in t or "\u2013" in t:

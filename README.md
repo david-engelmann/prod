@@ -8,7 +8,7 @@ Everything else in fleet tooling either waits forever or kills, and stopping a r
 
 ## Status
 
-Setup slice in progress. The build has not started. Closed rounds 0 of 100. The contract is a stub and is not yet met. Part of the impatient programming portfolio, in the Fleet Operations arc.
+Round 1 is built and in review. The detectors, the first two ladder rungs, and the sandbox harness are in place against the Round 1 contract. Closed rounds 0 of 100. Part of the impatient programming portfolio, in the Fleet Operations arc.
 
 ## Licence
 
