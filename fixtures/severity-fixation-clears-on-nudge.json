@@ -1,0 +1,20 @@
+{
+  "judgment_point": "severity",
+  "request": {
+    "evidence_span": {
+      "end_step": 3,
+      "start_step": 0
+    },
+    "pattern": [
+      "grep"
+    ],
+    "shape": "tool_fixation",
+    "trace_id": "sandbox-fixation-clears-on-nudge"
+  },
+  "response": {
+    "confidence": 0.77,
+    "kind": "score",
+    "score": 0.64
+  },
+  "synthetic": true
+}

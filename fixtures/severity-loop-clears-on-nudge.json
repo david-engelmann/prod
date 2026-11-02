@@ -1,0 +1,18 @@
+{
+  "judgment_point": "severity",
+  "request": {
+    "evidence_span": {
+      "end_step": 2,
+      "start_step": 0
+    },
+    "pattern": [
+      "grep(pattern=config, path=src)"
+    ],
+    "shape": "looping",
+    "trace_id": "sandbox-loop-clears-on-nudge"
+  },
+  "response": {
+    "kind": "abstention"
+  },
+  "synthetic": true
+}

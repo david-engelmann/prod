@@ -1,0 +1,42 @@
+{
+  "judgment_point": "recovery",
+  "request": {
+    "events": [
+      {
+        "call": "read(path=src/config.py)",
+        "progress": true,
+        "step": 3,
+        "tool": "read"
+      },
+      {
+        "call": "test(target=config)",
+        "progress": true,
+        "step": 4,
+        "tool": "test"
+      },
+      {
+        "call": "finish(summary=config located)",
+        "progress": true,
+        "step": 5,
+        "tool": "finish"
+      }
+    ],
+    "pattern": [
+      "grep(pattern=config, path=src)"
+    ],
+    "rung": "nudge",
+    "shape": "looping",
+    "trace_id": "sandbox-loop-clears-on-nudge"
+  },
+  "response": {
+    "choice": "recovering",
+    "confidence": 0.95,
+    "kind": "choice",
+    "probabilities": {
+      "getting_worse": 0.01,
+      "recovering": 0.95,
+      "still_stalled": 0.04
+    }
+  },
+  "synthetic": true
+}

@@ -7,9 +7,19 @@ The harness runs the detectors over the session as it grows, fires
 the ladder in order, and records the whole session as one timeline
 of events and interventions. Nothing here touches a network, a wall
 clock, or any agent outside this module, and nothing is left to chance.
+
+A session may run with a judgment source, any object that answers
+judge(point, request) with a recorded response or with no answer.
+The harness then asks for a severity score before a rung fires and
+records a trusted score on the intervention record, and asks for a
+recovery choice over the segment that follows each rung and records
+a trusted choice on that record. With no judgment source, or where
+an answer is missing or untrusted, the session record is exactly
+the record the harness produced before the seam existed.
 """
 
 from .detect import detect
+from .judgment import recovery_request, severity_request, trusted
 from .ladder import apply_rung, next_rung
 from .trace import Event, Trace
 
@@ -107,8 +117,13 @@ SCENARIOS = {
 }
 
 
-def run_session(scenario_name):
-    """Run one scripted sandbox session and return its full record."""
+def run_session(scenario_name, judgments=None):
+    """Run one scripted sandbox session and return its full record.
+
+    The optional judgments source is asked at the two judgment
+    points the contract states. It never changes which rung fires
+    or when, only what the intervention records carry.
+    """
     if scenario_name not in SCENARIOS:
         raise ValueError("unknown scenario " + str(scenario_name))
     scenario = SCENARIOS[scenario_name]
@@ -118,6 +133,26 @@ def run_session(scenario_name):
     detections = []
     last_intervention_step = -1
     stalled_out = False
+    pending = None
+
+    def assess_recovery(upto_step):
+        nonlocal pending
+        if judgments is None or pending is None:
+            pending = None
+            return
+        record = pending
+        pending = None
+        segment = [
+            event
+            for event in events
+            if record["at_step"] < event["step"] <= upto_step
+        ]
+        if not segment:
+            return
+        response = judgments.judge("recovery", recovery_request(record, segment))
+        if trusted(response):
+            record["recovery"] = response["choice"]
+
     while not agent.finished and len(events) < MAX_STEPS:
         raw = agent.next_event()
         if raw is None:
@@ -143,14 +178,26 @@ def run_session(scenario_name):
         detection = fresh[0]
         rung = next_rung(detection, interventions)
         if rung is None:
+            assess_recovery(step)
             stalled_out = True
             detections.append(detection)
             break
-        record = apply_rung(rung, detection, scenario["goal"], step, interventions)
+        assess_recovery(step)
+        severity = None
+        if judgments is not None:
+            answer = judgments.judge("severity", severity_request(detection))
+            if trusted(answer):
+                severity = answer["score"]
+        record = apply_rung(
+            rung, detection, scenario["goal"], step, interventions, severity=severity
+        )
         interventions.append(record)
         detections.append(detection)
         agent.receive(record)
         last_intervention_step = step
+        pending = record
+    if events:
+        assess_recovery(events[-1]["step"])
     stall_cleared = agent.finished and not stalled_out
     return {
         "session_id": "sandbox-" + scenario_name,

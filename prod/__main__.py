@@ -5,6 +5,7 @@ import json
 import sys
 
 from .detect import detect
+from .judgment import FixturePlayer, JudgmentError
 from .sandbox import SCENARIOS, run_session
 from .trace import TraceError, load_trace
 
@@ -27,6 +28,11 @@ def main(argv=None):
         choices=sorted(SCENARIOS),
         help="the scripted scenario to run",
     )
+    intervene_parser.add_argument(
+        "--fixtures",
+        default=None,
+        help="path to a directory of recorded judgment fixtures",
+    )
 
     args = parser.parse_args(argv)
     try:
@@ -34,10 +40,13 @@ def main(argv=None):
             trace = load_trace(args.trace)
             _print_json({"trace_id": trace.trace_id, "detections": detect(trace)})
             return 0
-        record = run_session(args.scenario)
+        judgments = None
+        if args.fixtures is not None:
+            judgments = FixturePlayer(args.fixtures)
+        record = run_session(args.scenario, judgments=judgments)
         _print_json(record)
         return 0
-    except (TraceError, ValueError) as exc:
+    except (TraceError, ValueError, JudgmentError) as exc:
         sys.stderr.write("error: " + str(exc) + "\n")
         return 2
 

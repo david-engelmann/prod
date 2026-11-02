@@ -8,7 +8,7 @@ Everything else in fleet tooling either waits forever or kills, and stopping a r
 
 ## Status
 
-Closed rounds 1 of 100. Round 1 landed in PR 2 and is recorded closed here. The detectors for looping and tool fixation, the first two ladder rungs with the escalation order enforced at every entry point, and the scripted sandbox harness are in place under contract obligations PR-1 to PR-18. The round closed after the independent red team, the two-axis review, the CodeRabbit pass, and the fixes for every finding they raised. Part of the impatient programming portfolio, in the Fleet Operations arc.
+Closed rounds 1 of 100. Round 1 landed in PR 2 and is recorded closed here. Round 2 is built and in review. The fixation detector now reports one detection per dominant tool in a window, and the decision model fixture seam stands behind the ladder under contract obligations PR-1 to PR-25. The seam is recorded fixtures and a fixture player only, built and tested offline with no live calls, and the detectors and the ladder behave exactly as they did in Round 1 wherever no trusted judgment answers. Part of the impatient programming portfolio, in the Fleet Operations arc.
 
 ## Licence
 

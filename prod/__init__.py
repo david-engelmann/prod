@@ -1,12 +1,22 @@
 """prod. A graded rescue ladder for stalled agents, sandbox only."""
 
 from .detect import detect
+from .judgment import (
+    CONFIDENCE_THRESHOLD,
+    FixturePlayer,
+    JudgmentError,
+    trusted,
+    validate_fixture,
+)
 from .ladder import LadderError, apply_rung, build_intervention, next_rung
 from .sandbox import SCENARIOS, run_session
 from .trace import Event, Trace, TraceError, load_trace
 
 __all__ = [
+    "CONFIDENCE_THRESHOLD",
     "Event",
+    "FixturePlayer",
+    "JudgmentError",
     "LadderError",
     "SCENARIOS",
     "Trace",
@@ -17,4 +27,6 @@ __all__ = [
     "load_trace",
     "next_rung",
     "run_session",
+    "trusted",
+    "validate_fixture",
 ]

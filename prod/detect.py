@@ -10,7 +10,8 @@ event reports progress. Detectors only ever look inside stall
 windows, so a span containing a progress call is never reported.
 Both detectors search subspans inside a window, and a fixation
 detection reports the shortest qualifying subspan for its tool
-rather than the whole window.
+rather than the whole window. A window yields one fixation
+detection per dominant tool that holds a qualifying span in it.
 """
 
 from bisect import bisect_left
@@ -165,34 +166,37 @@ def _fixation_span_for_tool(trace, positions_by_tool, tool):
 
 
 def _fixation_in_window(trace, first, last):
+    """One fixation detection per dominant tool with a qualifying span.
+
+    Detections are ordered by the start step of their evidence
+    spans, with the tool name breaking a tie between spans that
+    start at the same step.
+    """
     positions_by_tool = {}
     for idx in range(first, last + 1):
         positions_by_tool.setdefault(trace.events[idx].tool, []).append(idx)
-    best = None
+    found = []
     for tool in sorted(positions_by_tool):
         candidate = _fixation_span_for_tool(trace, positions_by_tool, tool)
         if candidate is None:
             continue
         length, start, end, count, unused = candidate
-        key = (length, start, tool)
-        if best is None or key < best[0]:
-            best = (key, tool, start, end, count, unused)
-    if best is None:
-        return None
-    _, tool, start, end, count, unused = best
-    length = end - start + 1
-    detail = (
-        "tool "
-        + tool
-        + " made "
-        + str(count)
-        + " of "
-        + str(length)
-        + " calls with no progress while "
-        + ", ".join(unused)
-        + " went unused"
-    )
-    return _detection(trace, "tool_fixation", [tool], start, end, detail)
+        detail = (
+            "tool "
+            + tool
+            + " made "
+            + str(count)
+            + " of "
+            + str(length)
+            + " calls with no progress while "
+            + ", ".join(unused)
+            + " went unused"
+        )
+        found.append(
+            (trace.events[start].step, tool, _detection(trace, "tool_fixation", [tool], start, end, detail))
+        )
+    found.sort(key=lambda item: (item[0], item[1]))
+    return [detection for _, _, detection in found]
 
 
 def detect(trace, from_step=0):
@@ -207,8 +211,6 @@ def detect(trace, from_step=0):
     found = []
     for first, last in _stall_windows(view.events):
         found.extend(_looping_in_window(view, first, last))
-        fixation = _fixation_in_window(view, first, last)
-        if fixation is not None:
-            found.append(fixation)
+        found.extend(_fixation_in_window(view, first, last))
     found.sort(key=lambda d: (d["evidence_span"]["start_step"], d["shape"]))
     return found
