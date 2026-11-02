@@ -18,6 +18,7 @@ offline. The player reads files from one directory and nothing else.
 """
 
 import json
+import math
 from pathlib import Path
 
 from .ladder import RUNGS
@@ -42,9 +43,29 @@ def _is_number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def _finite_float(value):
+    """The finite float a numeric value converts to, or None.
+
+    A value that cannot convert to a finite float, including an
+    integer too large for a float and a non finite float, is not a
+    number for the checks in this module, and asking never raises.
+    """
+    if not _is_number(value):
+        return None
+    try:
+        converted = float(value)
+    except (OverflowError, ValueError):
+        return None
+    if not math.isfinite(converted):
+        return None
+    return converted
+
+
 def _check_unit_interval(source, field, value):
-    if not _is_number(value) or not 0.0 <= float(value) <= 1.0:
+    converted = _finite_float(value)
+    if converted is None or not 0.0 <= converted <= 1.0:
         _fail(source, "field '" + field + "' is not a number between 0 and 1")
+    return converted
 
 
 def _check_pattern(source, request):
@@ -114,6 +135,8 @@ def _validate_response(source, point, response):
     if not isinstance(response, dict):
         _fail(source, "response is not an object")
     kind = response.get("kind")
+    if not isinstance(kind, str):
+        _fail(source, "response field 'kind' is not a string")
     if kind in _FIELDS_FOR_KIND:
         extra = set(response) - _FIELDS_FOR_KIND[kind]
         if extra:
@@ -153,10 +176,14 @@ def _validate_response(source, point, response):
         _fail(source, "response probabilities do not cover exactly the recovery labels")
     total = 0.0
     for label in RECOVERY_LABELS:
-        _check_unit_interval(source, "probabilities." + label, probabilities[label])
-        total += float(probabilities[label])
+        total += _check_unit_interval(
+            source, "probabilities." + label, probabilities[label]
+        )
     if abs(total - 1.0) > 0.001:
         _fail(source, "response probabilities do not add up to 1")
+
+
+_ENVELOPE_FIELDS = {"synthetic", "judgment_point", "request", "response"}
 
 
 def validate_fixture(data, source="fixture"):
@@ -167,6 +194,14 @@ def validate_fixture(data, source="fixture"):
     """
     if not isinstance(data, dict):
         _fail(source, "is not an object")
+    extra = set(data) - _ENVELOPE_FIELDS
+    if extra:
+        _fail(
+            source,
+            "carries the top level field "
+            + repr(sorted(extra, key=repr)[0])
+            + ", which the fixture envelope does not carry",
+        )
     if data.get("synthetic") is not True:
         _fail(source, "is not marked synthetic")
     point = data.get("judgment_point")
@@ -263,8 +298,8 @@ def trusted(response):
         return False
     if response.get("kind") not in ("score", "choice"):
         return False
-    confidence = response.get("confidence")
-    return _is_number(confidence) and float(confidence) >= CONFIDENCE_THRESHOLD
+    confidence = _finite_float(response.get("confidence"))
+    return confidence is not None and confidence >= CONFIDENCE_THRESHOLD
 
 
 def severity_request(detection):
