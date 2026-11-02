@@ -16,6 +16,8 @@ def test_contract_stub_obligations_exist():
         if m:
             found.append((m.group(1), ln))
     assert len(found) >= 5, f"expected at least 5 stub obligations, found {len(found)}"
+    numbers = sorted(int(re.search(r"-S(\d)\.", ln).group(1)) for _, ln in found)
+    assert numbers == [1, 2, 3, 4, 5], f"stub obligations must be exactly S1 to S5, found {numbers}"
     for prefix, ln in found:
         assert prefix == EXPECTED_PREFIX, f"obligation {ln[:12]} is not a {EXPECTED_PREFIX} obligation"
         words = len(ln.split())
