@@ -8,7 +8,7 @@ Everything else in fleet tooling either waits forever or kills, and stopping a r
 
 ## Status
 
-Seeded in October 2026. The build has not started. Part of the impatient programming portfolio, in the Fleet Operations arc.
+Setup slice in progress. The build has not started. Closed rounds 0 of 100. The contract is a stub and is not yet met. Part of the impatient programming portfolio, in the Fleet Operations arc.
 
 ## Licence
 
