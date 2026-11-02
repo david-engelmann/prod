@@ -1,21 +1,22 @@
-"""The graded rescue ladder, first two rungs.
+"""The graded rescue ladder, first three rungs.
 
-Escalation order is fixed. Nudge fires before sharper prompt. A rung
-fires only when every lower rung has been tried for that stall, where
-a lower rung tried on the same pattern earlier in the session counts
-as tried, and a rung that has already been tried for a stall never
-fires again for it. Every public entry point that builds an
-intervention enforces the same order against the session history.
-The later rungs named by the contract, smaller subtask, fork, and
-kill, are not implemented in this round, and kill is the last rung
-that belongs to deadman and is never reimplemented here.
+Escalation order is fixed. Nudge fires before sharper prompt, and
+sharper prompt fires before smaller subtask. A rung fires only when
+every lower rung has been tried for that stall, where a lower rung
+tried on the same pattern earlier in the session counts as tried,
+and a rung that has already been tried for a stall never fires again
+for it. Every public entry point that builds an intervention
+enforces the same order against the session history. The ladder as
+implemented ends at smaller subtask. The later rungs named by the
+contract, fork and kill, are not implemented here, and kill is the
+last rung that belongs to deadman and is never reimplemented here.
 
 Records handed to the ladder are validated before they are read. A
 detection record or a history record that is missing a field the
 ladder needs is refused with LadderError naming the missing field.
 """
 
-RUNGS = ("nudge", "sharper_prompt")
+RUNGS = ("nudge", "sharper_prompt", "smaller_subtask")
 
 _DETECTION_FIELDS = ("trace_id", "shape", "pattern", "evidence_span")
 
@@ -113,8 +114,8 @@ def build_intervention(rung, detection, goal, at_step, history=(), severity=None
 
     The escalation order is enforced against history, which defaults
     to an empty session, so a nudge can be built with no history and
-    a sharper prompt built with no nudge on record is refused. A
-    trusted severity score handed in by the caller is recorded on
+    a higher rung built without its lower rungs on record is refused.
+    A trusted severity score handed in by the caller is recorded on
     the record under the name severity and changes nothing else
     about it.
     """
@@ -127,7 +128,7 @@ def build_intervention(rung, detection, goal, at_step, history=(), severity=None
             + goal
             + "."
         )
-    else:
+    elif rung == "sharper_prompt":
         message = (
             "New instruction. Your previous approach stalled. The pattern was "
             + " then ".join(detection["pattern"])
@@ -136,6 +137,22 @@ def build_intervention(rung, detection, goal, at_step, history=(), severity=None
             + ", and it made no progress. Do not repeat that pattern. The goal is "
             + goal
             + ". Take a different first step toward it now."
+        )
+    else:
+        span = detection["evidence_span"]
+        message = (
+            "Smaller subtask. Your previous approach stalled. The pattern was "
+            + " then ".join(detection["pattern"])
+            + " in the shape "
+            + detection["shape"]
+            + ", and it made no progress, and neither a nudge nor a sharper "
+            + "prompt cleared it. The goal is "
+            + goal
+            + ". Do only the part of that work inside the stalled span, steps "
+            + str(span["start_step"])
+            + " to "
+            + str(span["end_step"])
+            + ", and finish that part before anything else."
         )
     record = {
         "rung": rung,

@@ -1,4 +1,4 @@
-"""PR-4, PR-5, PR-6, PR-13, PR-14, PR-15. The first two ladder rungs and their order."""
+"""PR-4, PR-5, PR-6, PR-13, PR-14, PR-15. The ladder rungs and their order."""
 
 import pytest
 
@@ -50,9 +50,14 @@ def test_sharper_prompt_record_names_the_pattern_and_restates_the_goal():
     assert GOAL in record["message"]
 
 
-def test_ladder_is_spent_after_both_rungs():
+# Round 4 alteration. This pin asserted the ladder was spent after
+# the two Round 1 rungs. PR-31 adds the smaller subtask rung, so the
+# spent state now follows the third rung. The claim the pin carries,
+# that a fully tried ladder offers no rung, is unchanged.
+def test_ladder_is_spent_after_all_three_rungs():
     history = [apply_rung("nudge", DETECTION, GOAL, at_step=4, history=[])]
     history.append(apply_rung("sharper_prompt", DETECTION, GOAL, at_step=9, history=history))
+    history.append(apply_rung("smaller_subtask", DETECTION, GOAL, at_step=14, history=history))
     assert next_rung(DETECTION, history) is None
 
 
@@ -102,7 +107,11 @@ def test_build_intervention_refuses_a_rung_already_tried_for_the_stall():
 def test_second_sharper_prompt_is_refused_by_apply_rung():
     history = [apply_rung("nudge", DETECTION, GOAL, at_step=4, history=[])]
     history.append(apply_rung("sharper_prompt", DETECTION, GOAL, at_step=9, history=history))
-    assert next_rung(DETECTION, history) is None
+    # Round 4 alteration. The lookup no longer reports the ladder
+    # spent at this history, because PR-31 offers the smaller subtask
+    # after the sharper prompt. The refusal this pin exists for, a
+    # second sharper prompt for the same stall, is unchanged.
+    assert next_rung(DETECTION, history) == "smaller_subtask"
     with pytest.raises(LadderError):
         apply_rung("sharper_prompt", DETECTION, GOAL, at_step=12, history=history)
 
