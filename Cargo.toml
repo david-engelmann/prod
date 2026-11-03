@@ -1,0 +1,14 @@
+[package]
+name = "prod"
+version = "0.1.0"
+edition = "2024"
+description = "A graded rescue ladder for stalled agents, exercised only in local sandboxes."
+license = "MIT"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+thiserror = "2"
+
+[dev-dependencies]
+sha2 = "0.10"
