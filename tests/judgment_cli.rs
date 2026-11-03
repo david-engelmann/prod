@@ -62,6 +62,49 @@ fn intervene_with_a_missing_fixtures_directory_exits_2() {
 }
 
 #[test]
+fn a_fixture_field_python_calls_not_printable_is_named_as_python_names_it() {
+    // PR-37 and PR-38. The envelope refusal names an extra
+    // field with the Python repr of its name, and Python's
+    // repr escapes every code point str.isprintable calls not
+    // printable, the unassigned points and the private use
+    // points included. Each expected line below is the line
+    // the Python tool prints for the same fixture, byte for
+    // byte.
+    let samples = [
+        ("x\u{378}y", "'x\\u0378y'"),
+        ("x\u{E000}y", "'x\\ue000y'"),
+        ("x\u{200B}y", "'x\\u200by'"),
+        ("x\u{2028}y", "'x\\u2028y'"),
+        ("x\u{A0}y", "'x\\xa0y'"),
+        ("café-λ", "'café-λ'"),
+    ];
+    for (name, named) in samples {
+        let dir = temp_dir("not-printable-field");
+        let pair = Value::Object(vec![(name.to_string(), Value::int(1))]);
+        std::fs::write(dir.join("probe.json"), pyjson::dumps_compact(&pair)).expect("file written");
+        let dir_text = dir.to_string_lossy().into_owned();
+        let out = run_cli_at_root(&[
+            "intervene",
+            "--scenario",
+            "loop-needs-sharper",
+            "--fixtures",
+            &dir_text,
+        ]);
+        assert_eq!(out.code, 2, "field {:?}", name);
+        assert_eq!(
+            out.stderr,
+            format!(
+                "error: fixture probe.json carries the top level field {}, which the fixture envelope does not carry\n",
+                named
+            ),
+            "field {:?}",
+            name
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+}
+
+#[test]
 fn intervene_with_a_broken_fixture_exits_2() {
     let dir = temp_dir("broken-fixture-cli");
     let text = std::fs::read_to_string(fixtures().join("recovery-loop-needs-sharper-nudge.json"))

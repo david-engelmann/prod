@@ -8,8 +8,8 @@ use common::root;
 const CANONICAL_PREFIX_SHA256: &str =
     "63d2f04005dc8eb111d3efca1be55c0911f9ad46bc7cf3c74d9f9908f4a86f11";
 const EXPECTED_PREFIX: &str = "PR";
-const TEXT_SUFFIXES: [&str; 9] = [
-    "md", "yml", "yaml", "py", "toml", "txt", "json", "jsonl", "rs",
+const TEXT_SUFFIXES: [&str; 11] = [
+    "md", "yml", "yaml", "py", "toml", "txt", "json", "jsonl", "rs", "sh", "lock",
 ];
 const SKIP_PARTS: [&str; 8] = [
     ".git",
@@ -77,12 +77,54 @@ fn agents_canonical_block_present() {
 #[test]
 fn readme_status_reports_rounds() {
     let text = std::fs::read_to_string(root().join("README.md")).unwrap();
-    let counts = closed_round_counts(&text);
+    // PR-42. The closed round count is a claim the Status
+    // section makes, so the pin counts it there and nowhere
+    // else. The phrase standing in another section does not
+    // satisfy the pin, and a README with no Status section
+    // fails it.
+    let counts = closed_round_counts(&status_section(&text));
     assert_eq!(
         counts,
         vec!["4".to_string()],
         "README status must report exactly one closed round count"
     );
+}
+
+#[test]
+fn the_round_count_is_read_in_the_status_section_only() {
+    let outside = "## What this is\n\nClosed rounds 9 of 100.\n\n## Status\n\nNo count recorded.\n\n## Licence\n\nMIT.\n";
+    assert!(closed_round_counts(&status_section(outside)).is_empty());
+    let inside = "## Status\n\nClosed rounds 9 of 100.\n\n## Licence\n\nMIT.\n";
+    assert_eq!(
+        closed_round_counts(&status_section(inside)),
+        vec!["9".to_string()]
+    );
+    let missing = "## What this is\n\nClosed rounds 9 of 100.\n";
+    assert!(closed_round_counts(&status_section(missing)).is_empty());
+}
+
+/// The text of the Status section, from its heading to the
+/// next heading of the same level or the end of the text. A
+/// text with no Status heading yields an empty section.
+fn status_section(text: &str) -> String {
+    let mut in_section = false;
+    let mut section = String::new();
+    for line in text.lines() {
+        if line.starts_with("## ") {
+            if line == "## Status" {
+                in_section = true;
+                continue;
+            }
+            if in_section {
+                break;
+            }
+        }
+        if in_section {
+            section.push_str(line);
+            section.push('\n');
+        }
+    }
+    section
 }
 
 /// Every match of the pinned form, a closed rounds count whose
@@ -130,10 +172,19 @@ fn no_em_or_en_dash_in_text_files() {
                 .extension()
                 .map(|s| s.to_str().unwrap_or(""))
                 .unwrap_or("");
-            if !TEXT_SUFFIXES.contains(&suffix) {
+            // PR-42 covers the text files of the tree, so the
+            // scan takes every file whose suffix names a text
+            // form and every file with no suffix at all whose
+            // bytes decode as UTF-8. A file with no suffix whose
+            // bytes do not decode is not a text file and stands
+            // outside the scan, as does any file whose suffix
+            // names no text form.
+            let bytes = std::fs::read(&path).unwrap();
+            let is_text = TEXT_SUFFIXES.contains(&suffix)
+                || (suffix.is_empty() && std::str::from_utf8(&bytes).is_ok());
+            if !is_text {
                 continue;
             }
-            let bytes = std::fs::read(&path).unwrap();
             if contains_bytes(&bytes, em) || contains_bytes(&bytes, en) {
                 bad.push(relative);
             }

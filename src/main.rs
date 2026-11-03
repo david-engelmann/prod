@@ -263,6 +263,12 @@ struct SubcommandSpec {
     name: String,
     value_flags: Vec<String>,
     longs: Vec<String>,
+    /// The value flags that declare a fixed set of possible
+    /// values, with the values clap's own model declares for
+    /// them. The Python parser validates such a value when it
+    /// consumes it, so the walk below validates it at the same
+    /// moment rather than after a later help token has fired.
+    choices: Vec<(String, Vec<String>)>,
 }
 
 fn subcommand_specs() -> Vec<SubcommandSpec> {
@@ -271,6 +277,7 @@ fn subcommand_specs() -> Vec<SubcommandSpec> {
         .map(|sub| {
             let mut value_flags: Vec<String> = Vec::new();
             let mut longs: Vec<String> = Vec::new();
+            let mut choices: Vec<(String, Vec<String>)> = Vec::new();
             for arg in sub.get_arguments() {
                 let Some(long) = arg.get_long() else {
                     continue;
@@ -280,7 +287,15 @@ fn subcommand_specs() -> Vec<SubcommandSpec> {
                     longs.push(name.clone());
                 }
                 if matches!(arg.get_action(), clap::ArgAction::Set) {
-                    value_flags.push(name);
+                    value_flags.push(name.clone());
+                    let possible: Vec<String> = arg
+                        .get_possible_values()
+                        .iter()
+                        .map(|value| value.get_name().to_string())
+                        .collect();
+                    if !possible.is_empty() {
+                        choices.push((name, possible));
+                    }
                 }
             }
             if !longs.iter().any(|long| long == "--help") {
@@ -290,9 +305,21 @@ fn subcommand_specs() -> Vec<SubcommandSpec> {
                 name: sub.get_name().to_string(),
                 value_flags,
                 longs,
+                choices,
             }
         })
         .collect()
+}
+
+/// Whether a value handed to one of a subcommand's flags
+/// violates the fixed set that flag declares. A flag outside
+/// the choices table declares no set and takes any value, as
+/// the Python parser takes it.
+fn choice_violation(spec: &SubcommandSpec, flag: &str, value: &str) -> bool {
+    spec.choices
+        .iter()
+        .find(|(name, _)| name == flag)
+        .is_some_and(|(_, values)| !values.iter().any(|item| item == value))
 }
 
 /// How a token reads as a help token on the current parser.
@@ -356,24 +383,30 @@ enum Preprocess {
 /// The Python parser consumes its arguments from the left. A
 /// value flag takes the next token when that token reads as a
 /// positional string, and this walk joins such a value onto its
-/// flag in the equals form. A value flag that meets an option
-/// token is an error the parser exits on at once, as are a word
-/// the subcommand slot cannot take and a help token carrying an
-/// explicit value, and past any of those this walk hands the
-/// arguments to clap untouched, since clap refuses the same
-/// invocation in its own voice. Help fires where the scan
-/// reaches it, ahead of extra tokens already collected, and this
-/// walk answers a fired help token itself. A separator token
-/// ends the scan. The Python parser refuses a separator that
-/// follows an otherwise complete invocation, where clap accepts
-/// it silently, so this walk duplicates the separator and clap
-/// refuses the copy as an unexpected argument in its own voice.
+/// flag in the equals form. A flag that declares a fixed set of
+/// values has its value validated as it is consumed, in the
+/// joined form and the attached form alike, and a value outside
+/// the set is an error the parser exits on at once, so the walk
+/// stops there and hands the invocation to clap untouched rather
+/// than letting a later help token fire over it. A value flag
+/// that meets an option token is an error the parser exits on
+/// at once, as are a word the subcommand slot cannot take and a
+/// help token carrying an explicit value, and past any of those
+/// this walk hands the arguments to clap untouched, since clap
+/// refuses the same invocation in its own voice. Help fires
+/// where the scan reaches it, ahead of extra tokens already
+/// collected, and this walk answers a fired help token itself.
+/// A separator token ends the scan. The Python parser refuses
+/// a separator that follows an otherwise complete invocation,
+/// where clap accepts it silently, so this walk duplicates the
+/// separator and clap refuses the copy as an unexpected
+/// argument in its own voice.
 fn preprocess(tokens: &[OsString]) -> Preprocess {
     let specs = subcommand_specs();
     let root_longs: Vec<String> = vec!["--help".to_string()];
     let mut out: Vec<OsString> = Vec::new();
     let mut current: Option<usize> = None;
-    let mut pending = false;
+    let mut pending: Option<String> = None;
     let mut blocked = false;
     let mut separator: Option<usize> = None;
     for token in tokens {
@@ -382,16 +415,21 @@ fn preprocess(tokens: &[OsString]) -> Preprocess {
             continue;
         }
         let text = token.to_string_lossy().into_owned();
-        if pending {
-            pending = false;
+        if let Some(flag_name) = pending.take() {
             if text == "--" {
                 separator = Some(out.len());
                 out.push(token.clone());
             } else if reads_as_positional(&text) {
-                let mut flag = out.pop().expect("a pending flag precedes its value");
-                flag.push("=");
-                flag.push(token);
-                out.push(flag);
+                let spec = &specs[current.expect("a pending flag stands inside a subcommand")];
+                if choice_violation(spec, &flag_name, &text) {
+                    blocked = true;
+                    out.push(token.clone());
+                } else {
+                    let mut flag = out.pop().expect("a pending flag precedes its value");
+                    flag.push("=");
+                    flag.push(token);
+                    out.push(flag);
+                }
             } else {
                 blocked = true;
                 out.push(token.clone());
@@ -433,15 +471,22 @@ fn preprocess(tokens: &[OsString]) -> Preprocess {
         let spec = &specs[current.expect("a subcommand is selected")];
         if text.starts_with("--") {
             let name = text.split('=').next().unwrap_or(&text);
-            if spec
+            let matched: Vec<&String> = spec
                 .value_flags
                 .iter()
                 .filter(|flag| flag.starts_with(name))
-                .count()
-                == 1
-            {
-                if !text.contains('=') {
-                    pending = true;
+                .collect();
+            if matched.len() == 1 {
+                let canonical = matched[0].clone();
+                match text.split_once('=') {
+                    Some((_, value)) => {
+                        if choice_violation(spec, &canonical, value) {
+                            blocked = true;
+                        }
+                    }
+                    None => {
+                        pending = Some(canonical);
+                    }
                 }
                 out.push(token.clone());
                 continue;
@@ -453,6 +498,36 @@ fn preprocess(tokens: &[OsString]) -> Preprocess {
         out.insert(index + 1, OsString::from("--"));
     }
     Preprocess::Run(out)
+}
+
+/// Answer a clap error the way the command line answers it.
+///
+/// An error clap prints to standard error, a malformed
+/// invocation, is printed there and answered with its own exit
+/// code. An error clap prints to standard output is the help
+/// text, and help output takes the failed write discipline of
+/// every document the tool prints, because the Python tool's
+/// help goes to the same buffered standard output its documents
+/// do. The help is rendered and passed through print_out, so a
+/// standard output that cannot take the bytes answers at the
+/// status the failure family carries, 120 under a small output
+/// and 1 under a larger one, with the tool's one error line,
+/// rather than exiting 0 over a print whose failure was
+/// discarded.
+fn answer_clap_error(error: clap::Error) -> ExitCode {
+    if error.use_stderr() {
+        let code = error.exit_code();
+        let _ = error.print();
+        return ExitCode::from(code as u8);
+    }
+    let text = error.render().to_string();
+    match print_out(&text) {
+        Ok(()) => ExitCode::from(error.exit_code() as u8),
+        Err(failure) => {
+            eprintln!("error: {}", failure);
+            ExitCode::from(refusal_status(&failure))
+        }
+    }
 }
 
 fn main() -> ExitCode {
@@ -486,21 +561,13 @@ fn run() -> ExitCode {
             argv.push(OsString::from("--help"));
             return match Cli::try_parse_from(argv) {
                 Ok(_) => ExitCode::from(0),
-                Err(error) => {
-                    let code = error.exit_code();
-                    let _ = error.print();
-                    ExitCode::from(code as u8)
-                }
+                Err(error) => answer_clap_error(error),
             };
         }
     };
     let cli = match Cli::try_parse_from(std::iter::once(program).chain(joined)) {
         Ok(cli) => cli,
-        Err(error) => {
-            let code = error.exit_code();
-            let _ = error.print();
-            return ExitCode::from(code as u8);
-        }
+        Err(error) => return answer_clap_error(error),
     };
     let outcome = match &cli.command {
         Command::Detect(args) => cmd_detect(args),

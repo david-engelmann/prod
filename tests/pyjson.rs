@@ -46,6 +46,53 @@ fn a_repeated_key_keeps_its_first_position_and_last_value() {
 }
 
 #[test]
+fn a_repeated_key_inside_a_nested_object_behaves_the_same() {
+    // The stored entries carry the semantics directly, since
+    // the compact writer sorts its keys. A repeated key keeps
+    // the position of its first occurrence and the value of
+    // its last, at every depth.
+    let parsed = pyjson::parse(r#"{"x": {"k": 1, "k": 2}, "k": 0, "k": 9}"#).unwrap();
+    let Value::Object(entries) = &parsed else {
+        panic!("the document reads as an object");
+    };
+    let keys: Vec<&str> = entries.iter().map(|(key, _)| key.as_str()).collect();
+    assert_eq!(keys, ["x", "k"]);
+    assert_eq!(entries[1].1, Value::int(9));
+    let Value::Object(nested) = &entries[0].1 else {
+        panic!("the nested value reads as an object");
+    };
+    assert_eq!(nested.len(), 1);
+    assert_eq!(nested[0].0, "k");
+    assert_eq!(nested[0].1, Value::int(2));
+}
+
+#[test]
+fn repr_escapes_the_code_points_python_calls_not_printable() {
+    // One sample per family the str.isprintable rule rests on,
+    // each expected in the form the Python repr prints for the
+    // same string. The refusal level pin over these same
+    // samples stands in the judgment CLI tests.
+    let cases = [
+        ("x\u{378}y", "'x\\u0378y'"),
+        ("x\u{E000}y", "'x\\ue000y'"),
+        ("x\u{200B}y", "'x\\u200by'"),
+        ("x\u{2028}y", "'x\\u2028y'"),
+        ("x\u{A0}y", "'x\\xa0y'"),
+        ("x\u{1}y", "'x\\x01y'"),
+        ("x\u{10FFFF}y", "'x\\U0010ffffy'"),
+        ("letters é and λ", "'letters é and λ'"),
+    ];
+    for (text, expected) in cases {
+        assert_eq!(
+            py_repr(&Value::Str(text.to_string())),
+            expected,
+            "repr of {:?}",
+            text
+        );
+    }
+}
+
+#[test]
 fn an_unpaired_surrogate_reads_as_the_replacement_character() {
     let parsed = pyjson::parse(r#""\ud800""#).unwrap();
     assert_eq!(parsed, Value::Str("\u{FFFD}".to_string()));

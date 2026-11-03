@@ -239,12 +239,118 @@ fn code_only(source: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
+/// The forbidden markers a source carries. A marker is found
+/// in the literal code, and in the paths the source's use
+/// declarations resolve to, since a grouped import never
+/// spells the path it names whole in the text and the literal
+/// reading alone waves it through.
 fn forbidden_uses(source: &str) -> Vec<String> {
     let code = code_only(source);
-    forbidden_markers()
+    let mut found: Vec<String> = forbidden_markers()
         .into_iter()
         .filter(|marker| code.contains(marker.as_str()))
-        .collect()
+        .collect();
+    let resolved = resolved_use_paths(&code);
+    for marker in forbidden_markers() {
+        if !found.contains(&marker) && resolved.iter().any(|path| path.contains(marker.as_str())) {
+            found.push(marker);
+        }
+    }
+    found
+}
+
+fn join_path(prefix: &str, path: &str) -> String {
+    if prefix.is_empty() {
+        path.to_string()
+    } else {
+        format!("{}::{}", prefix, path)
+    }
+}
+
+/// Split a comma separated list at its top level, where
+/// commas inside a nested brace group stay with their group.
+fn split_top_level(text: &str) -> Vec<&str> {
+    let mut parts = Vec::new();
+    let mut depth = 0i32;
+    let mut start = 0usize;
+    for (at, ch) in text.char_indices() {
+        match ch {
+            '{' => depth += 1,
+            '}' => depth -= 1,
+            ',' if depth == 0 => {
+                parts.push(&text[start..at]);
+                start = at + 1;
+            }
+            _ => {}
+        }
+    }
+    let tail = &text[start..];
+    if !tail.trim().is_empty() {
+        parts.push(tail);
+    }
+    parts
+}
+
+/// Expand one use tree into the paths it names. A brace group
+/// expands each of its items under the path the group stands
+/// on, a nested group extends that path first, an alias keeps
+/// the path it renames, and self names the path it stands on.
+fn expand_use_tree(tree: &str, prefix: &str, out: &mut Vec<String>) {
+    let tree = tree.trim();
+    if tree.is_empty() {
+        return;
+    }
+    if let Some(inner) = tree
+        .strip_prefix('{')
+        .and_then(|rest| rest.strip_suffix('}'))
+    {
+        for item in split_top_level(inner) {
+            expand_use_tree(item, prefix, out);
+        }
+        return;
+    }
+    if let Some(at) = tree.find("::{") {
+        let joined = join_path(prefix, tree[..at].trim());
+        expand_use_tree(&tree[at + 2..], &joined, out);
+        return;
+    }
+    let leaf = tree.split(" as ").next().unwrap_or(tree).trim();
+    if leaf == "self" {
+        if !prefix.is_empty() {
+            out.push(prefix.to_string());
+        }
+        return;
+    }
+    out.push(join_path(prefix, leaf));
+}
+
+/// The paths the code's use declarations name, with grouped,
+/// nested, and aliased trees resolved to the paths they stand
+/// for. The declarations are read from comment free code, so
+/// prose is never a finding here either.
+fn resolved_use_paths(code: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = code.as_bytes();
+    let mut at = 0usize;
+    while at < bytes.len() {
+        let is_use = code[at..].starts_with("use")
+            && (at == 0
+                || !matches!(
+                    bytes[at - 1],
+                    b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_'
+                ))
+            && matches!(bytes.get(at + 3), Some(b' ' | b'\t' | b'\n' | b'\r' | b'{'));
+        if !is_use {
+            at += 1;
+            continue;
+        }
+        let Some(end) = code[at..].find(';') else {
+            break;
+        };
+        expand_use_tree(&code[at + 3..at + end], "", &mut out);
+        at += end + 1;
+    }
+    out
 }
 
 #[test]
@@ -290,6 +396,57 @@ fn a_real_capability_use_is_a_forbidden_use() {
     assert_eq!(forbidden_uses(&clock).len(), 1);
     let env = ["let _ = std::env::", "var(\"X\");\n"].concat();
     assert_eq!(forbidden_uses(&env).len(), 1);
+}
+
+#[test]
+fn grouped_import_forms_are_forbidden_uses() {
+    // PR-42. A grouped import never spells the path it names
+    // whole, so each form below smuggles one forbidden
+    // capability past the literal reading and the resolved
+    // reading has to catch it. The snippets are assembled
+    // from pieces, as the rest of this file assembles them.
+    let cases: [(&str, &str); 7] = [
+        (
+            concat!("use std::pro", "cess::{Command};\n"),
+            concat!("std::process::", "Command"),
+        ),
+        (
+            concat!("use std::{", "net::TcpListener};\n"),
+            concat!("std::", "net"),
+        ),
+        (
+            concat!("use std::{net::{TcpStream, ", "UdpSocket}};\n"),
+            concat!("Udp", "Socket"),
+        ),
+        (
+            concat!("use std::time::{", "SystemTime};\n"),
+            concat!("System", "Time"),
+        ),
+        (
+            concat!("use std::{thread::", "sleep};\n"),
+            concat!("thread::", "sleep"),
+        ),
+        (
+            concat!("use std::env::{self, ", "var};\n"),
+            concat!("env::", "var"),
+        ),
+        (
+            concat!("use std::process::", "Command as Spawn;\n"),
+            concat!("std::process::", "Command"),
+        ),
+    ];
+    for (source, marker) in cases {
+        let found = forbidden_uses(source);
+        assert!(
+            found.iter().any(|item| item == marker),
+            "{:?} must name {:?}, found {:?}",
+            source,
+            marker,
+            found
+        );
+    }
+    let benign = "use std::collections::{BTreeMap, HashMap};\n";
+    assert!(forbidden_uses(benign).is_empty());
 }
 
 #[test]

@@ -5,6 +5,49 @@ mod common;
 use common::{root, run_cli_at_root, temp_dir, text_of};
 use prod::pyjson;
 
+/// Run the binary with standard output on a pipe whose read
+/// end is closed before the child starts, so the child's
+/// first write to standard output meets a broken pipe with
+/// no timing window in the result.
+fn run_with_a_closed_stdout(args: &[&str]) -> (i32, String) {
+    let (reader, writer) = std::io::pipe().expect("pipe opens");
+    drop(reader);
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_prod"))
+        .args(args)
+        .current_dir(root())
+        .stdout(std::process::Stdio::from(writer))
+        .stderr(std::process::Stdio::piped())
+        .output()
+        .expect("binary runs");
+    (
+        output.status.code().unwrap_or(-1),
+        String::from_utf8(output.stderr).expect("stderr is UTF-8"),
+    )
+}
+
+#[test]
+fn help_on_a_closed_stdout_answers_120_with_the_error_line() {
+    // PR-37. The failed write discipline covers every byte
+    // the tool prints to standard output, the help text
+    // included. The Python tool answers 120 when its help
+    // cannot be written, since the help is a small output,
+    // and the port answers the same way in its own one error
+    // line discipline rather than exiting 0.
+    for args in [
+        &["--help"][..],
+        &["detect", "--help"][..],
+        &["intervene", "--help"][..],
+    ] {
+        let (code, stderr) = run_with_a_closed_stdout(args);
+        assert_eq!(code, 120, "args {:?}", args);
+        assert_eq!(
+            stderr, "error: stdout: Broken pipe (os error 32)\n",
+            "args {:?}",
+            args
+        );
+    }
+}
+
 #[test]
 fn detect_looping_example_matches_the_committed_output() {
     let out = run_cli_at_root(&["detect", "--trace", "examples/looping_trace.json"]);
