@@ -117,6 +117,7 @@ pub fn scenarios() -> Vec<Scenario> {
             recovery(),
             &["smaller_subtask"],
         ),
+        scenario("loop-needs-fork", goal, loop_stall(), recovery(), &["fork"]),
         scenario(
             "fixation-clears-on-nudge",
             goal,
