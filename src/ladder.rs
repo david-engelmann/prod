@@ -1,16 +1,16 @@
-//! The graded rescue ladder, first three rungs.
+//! The graded rescue ladder, first four rungs.
 //!
 //! Escalation order is fixed. Nudge fires before sharper prompt,
-//! and sharper prompt fires before smaller subtask. A rung fires
-//! only when every lower rung has been tried for that stall,
-//! where a lower rung tried on the same pattern earlier in the
-//! session counts as tried, and a rung that has already been
-//! tried for a stall never fires again for it. Every public entry
-//! point that builds an intervention enforces the same order
-//! against the session history. The ladder as implemented ends at
-//! smaller subtask. The later rungs named by the contract, fork
-//! and kill, are not implemented here, and kill is the last rung
-//! that belongs to deadman and is never reimplemented here.
+//! sharper prompt fires before smaller subtask, and smaller
+//! subtask fires before fork. A rung fires only when every lower
+//! rung has been tried for that stall, where a lower rung tried
+//! on the same pattern earlier in the session counts as tried,
+//! and a rung that has already been tried for a stall never
+//! fires again for it. Every public entry point that builds an
+//! intervention enforces the same order against the session
+//! history. The ladder as implemented ends at fork. The last
+//! rung named by the contract, kill, is not implemented here,
+//! and kill belongs to deadman and is never reimplemented here.
 //!
 //! Records handed to the ladder are validated before they are
 //! read. A detection record or a history record that is missing a
@@ -19,7 +19,7 @@
 
 use crate::pyjson::{Value, py_eq, py_str};
 
-pub const RUNGS: [&str; 3] = ["nudge", "sharper_prompt", "smaller_subtask"];
+pub const RUNGS: [&str; 4] = ["nudge", "sharper_prompt", "smaller_subtask", "fork"];
 
 const DETECTION_FIELDS: [&str; 4] = ["trace_id", "shape", "pattern", "evidence_span"];
 
@@ -236,7 +236,7 @@ pub fn build_intervention(
             shape,
             goal
         )
-    } else {
+    } else if rung == "smaller_subtask" {
         let span = detection
             .get("evidence_span")
             .expect("the detection was validated by the order check");
@@ -248,6 +248,19 @@ pub fn build_intervention(
             field_text(span, "start_step"),
             field_text(span, "end_step")
         )
+    } else if rung == "fork" {
+        format!(
+            "Fork. Your previous approach stalled. The pattern was {} in the shape {}, and it made no progress, and neither a nudge nor a sharper prompt nor a smaller subtask cleared it. The goal is {}. Split the work from here into separate attempts, and run each attempt toward the goal on its own, and keep to the attempt that makes progress.",
+            pattern.join(" then "),
+            shape,
+            goal
+        )
+    } else {
+        // The order check above refuses every word outside
+        // RUNGS before the message is built, so this arm is
+        // never reached. It stands so every implemented rung
+        // names an explicit branch, as PR-44 states.
+        return Err(fail(format!("unknown rung {}", rung)));
     };
     let fired_by = Value::object(vec![
         (

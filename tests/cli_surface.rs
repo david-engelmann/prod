@@ -17,6 +17,16 @@
 //! example trace and the committed fixtures, plus any files the
 //! case itself seeds, and compares the exit code, both streams,
 //! and the full final state of the directory.
+//!
+//! Round 6 regeneration. Thirteen cases were re-recorded
+//! against the Round 6 binary and no case was added or removed
+//! and no case changed sides, so the counts below stand.
+//! Eleven cases carry the scenario enumeration in their help
+//! or error text, and the enumeration gains the fork scenario
+//! under PR-48. Two oracle cases run the loop-never-clears
+//! session, whose record gains the fork intervention under
+//! PR-46. Every other case stands byte for byte as the Round 5
+//! tree left it.
 
 mod common;
 

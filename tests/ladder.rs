@@ -104,8 +104,12 @@ fn sharper_prompt_record_names_the_pattern_and_restates_the_goal() {
 // PR-31 adds the smaller subtask rung, so the spent state now
 // follows the third rung. The claim the pin carries, that a
 // fully tried ladder offers no rung, is unchanged.
+// Round 6 alteration. PR-45 adds the fork rung, so the spent
+// state now follows the fourth rung, and after the third rung
+// the lookup offers the fork. The claim the pin carries is
+// unchanged.
 #[test]
-fn ladder_is_spent_after_all_three_rungs() {
+fn ladder_is_spent_after_all_four_rungs() {
     let mut history = nudge_history();
     history.push(
         apply_rung(
@@ -128,6 +132,14 @@ fn ladder_is_spent_after_all_three_rungs() {
             None,
         )
         .expect("smaller subtask builds"),
+    );
+    assert_eq!(
+        next_rung(&detection(), &history).expect("lookup works"),
+        Some("fork".to_string())
+    );
+    history.push(
+        apply_rung("fork", &detection(), GOAL, Value::int(19), &history, None)
+            .expect("fork builds"),
     );
     assert_eq!(
         next_rung(&detection(), &history).expect("lookup works"),

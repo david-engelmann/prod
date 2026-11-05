@@ -300,16 +300,18 @@ fn lower_rungs_tried_on_a_different_stall_do_not_unlock_the_subtask() {
     );
 }
 
+// Round 6 alteration. The pin asserted fork and kill were both
+// refused as words the ladder does not carry. PR-45 makes fork
+// the fourth rung, so fork now builds over a full lower history
+// and only kill stands refused. The claim the pin carries, that
+// kill is not prod's rung to fire, is unchanged.
 #[test]
-fn fork_and_kill_are_not_rungs_of_this_ladder() {
+fn kill_is_not_a_rung_of_this_ladder() {
     let history = history_through(&["nudge", "sharper_prompt", "smaller_subtask"]);
-    for rung in ["fork", "kill"] {
-        assert!(
-            build_intervention(rung, &detection(), GOAL, Value::int(20), &history, None).is_err(),
-            "{} is refused",
-            rung
-        );
-    }
+    assert!(
+        build_intervention("kill", &detection(), GOAL, Value::int(20), &history, None).is_err(),
+        "kill is refused"
+    );
 }
 
 #[test]

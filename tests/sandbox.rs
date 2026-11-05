@@ -84,6 +84,9 @@ fn fixation_scenario_is_rescued_by_nudge() {
 // rungs in order. The claim the pin carries, that an agent
 // ignoring every rung ends stalled with every rung tried, is
 // unchanged.
+// Round 6 alteration. PR-46 extends the same outcome over the
+// fourth rung the ladder gains, so the timeline now records all
+// four rungs in order. The claim the pin carries is unchanged.
 #[test]
 fn agent_that_ignores_every_rung_ends_stalled_with_all_recorded() {
     let record = session("loop-never-clears");
@@ -94,7 +97,8 @@ fn agent_that_ignores_every_rung_ends_stalled_with_all_recorded() {
         vec![
             "nudge".to_string(),
             "sharper_prompt".to_string(),
-            "smaller_subtask".to_string()
+            "smaller_subtask".to_string(),
+            "fork".to_string()
         ]
     );
 }
