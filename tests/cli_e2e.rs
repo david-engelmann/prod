@@ -3,7 +3,7 @@
 mod common;
 
 use common::{root, run_cli_at_root, temp_dir, text_of};
-use prod::pyjson;
+use westering::pyjson;
 
 /// Run the binary with standard output on a pipe whose read
 /// end is closed before the child starts, so the child's
@@ -12,7 +12,7 @@ use prod::pyjson;
 fn run_with_a_closed_stdout(args: &[&str]) -> (i32, String) {
     let (reader, writer) = std::io::pipe().expect("pipe opens");
     drop(reader);
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_prod"))
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_westering"))
         .args(args)
         .current_dir(root())
         .stdout(std::process::Stdio::from(writer))

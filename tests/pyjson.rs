@@ -4,7 +4,7 @@
 mod common;
 
 use common::value;
-use prod::pyjson::{
+use westering::pyjson::{
     self, ParseError, Value, deepest_path, dumps_compact, dumps_indent2, int_text_cmp, py_eq,
     py_float_repr, py_repr,
 };

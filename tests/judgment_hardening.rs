@@ -7,9 +7,9 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use common::{root, temp_dir, value, write_json};
-use prod::judgment::{FixturePlayer, JudgmentSource, check_answer, trusted, validate_fixture};
-use prod::pyjson::{self, Value};
-use prod::sandbox::run_session;
+use westering::judgment::{FixturePlayer, JudgmentSource, check_answer, trusted, validate_fixture};
+use westering::pyjson::{self, Value};
+use westering::sandbox::run_session;
 
 fn fixtures() -> PathBuf {
     root().join("fixtures")

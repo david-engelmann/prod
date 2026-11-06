@@ -1,4 +1,4 @@
-//! Command line entry point, the prod binary.
+//! Command line entry point, the westering binary.
 //!
 //! Subcommands
 //!   detect     run the stall detectors over a trace file
@@ -28,11 +28,11 @@ use std::process::ExitCode;
 
 use clap::{Args, CommandFactory, Parser, Subcommand};
 
-use prod::detect;
-use prod::judgment::{FixtureLoadError, FixturePlayer, JudgmentSource};
-use prod::pyjson::{self, Value, decimal_digit_value};
-use prod::sandbox::{RunSessionError, run_session, scenario_names};
-use prod::trace::{LoadTraceError, load_trace};
+use westering::detect;
+use westering::judgment::{FixtureLoadError, FixturePlayer, JudgmentSource};
+use westering::pyjson::{self, Value, decimal_digit_value};
+use westering::sandbox::{RunSessionError, run_session, scenario_names};
+use westering::trace::{LoadTraceError, load_trace};
 
 #[derive(Parser)]
 #[command(
@@ -549,7 +549,7 @@ fn main() -> ExitCode {
 
 fn run() -> ExitCode {
     let mut args = std::env::args_os();
-    let program = args.next().unwrap_or_else(|| OsString::from("prod"));
+    let program = args.next().unwrap_or_else(|| OsString::from("westering"));
     let rest: Vec<OsString> = args.collect();
     let joined = match preprocess(&rest) {
         Preprocess::Run(joined) => joined,

@@ -4,8 +4,8 @@
 mod common;
 
 use common::{assert_py_eq, text_of, value, without};
-use prod::ladder::{apply_rung, build_intervention, next_rung};
-use prod::pyjson::Value;
+use westering::ladder::{apply_rung, build_intervention, next_rung};
+use westering::pyjson::Value;
 
 const GOAL: &str = "Find the config file and report its path";
 

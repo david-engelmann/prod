@@ -3,8 +3,8 @@
 mod common;
 
 use common::{detections_of, ev, make_trace, pattern_of, span_of};
-use prod::detect;
-use prod::pyjson::Value;
+use westering::detect;
+use westering::pyjson::Value;
 
 fn two_tool_events() -> Vec<Value> {
     vec![
@@ -19,7 +19,7 @@ fn two_tool_events() -> Vec<Value> {
     ]
 }
 
-fn fixation_in(trace: &prod::trace::Trace) -> Vec<Value> {
+fn fixation_in(trace: &westering::trace::Trace) -> Vec<Value> {
     detections_of(&detect::detect(trace, 0), "tool_fixation")
 }
 

@@ -34,7 +34,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use common::{run_cli, temp_dir};
-use prod::pyjson::{self, Value};
+use westering::pyjson::{self, Value};
 
 const EXPECTED_CASES: usize = 82;
 const EXPECTED_ORACLE_CASES: usize = 32;

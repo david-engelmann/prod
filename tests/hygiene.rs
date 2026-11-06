@@ -451,10 +451,10 @@ fn grouped_import_forms_are_forbidden_uses() {
 
 #[test]
 fn session_output_is_byte_identical_across_runs() {
-    let first = prod::sandbox::run_session("loop-needs-sharper", None).unwrap();
-    let second = prod::sandbox::run_session("loop-needs-sharper", None).unwrap();
-    let first_text = prod::pyjson::dumps_indent2(&first);
-    let second_text = prod::pyjson::dumps_indent2(&second);
+    let first = westering::sandbox::run_session("loop-needs-sharper", None).unwrap();
+    let second = westering::sandbox::run_session("loop-needs-sharper", None).unwrap();
+    let first_text = westering::pyjson::dumps_indent2(&first);
+    let second_text = westering::pyjson::dumps_indent2(&second);
     assert_eq!(first_text, second_text);
 }
 
@@ -472,10 +472,10 @@ fn examples_and_fixtures_are_synthetic() {
     assert!(!traces.is_empty(), "no example traces found");
     for path in traces {
         let text = std::fs::read_to_string(&path).unwrap();
-        let data = prod::pyjson::parse(&text).unwrap();
+        let data = westering::pyjson::parse(&text).unwrap();
         assert_eq!(
             data.get("synthetic"),
-            Some(&prod::pyjson::Value::Bool(true)),
+            Some(&westering::pyjson::Value::Bool(true)),
             "example {} is not marked synthetic",
             path.file_name().unwrap().to_string_lossy()
         );

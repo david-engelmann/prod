@@ -1,4 +1,4 @@
-//! prod. A graded rescue ladder for stalled agents, sandbox only.
+//! westering. A graded rescue ladder for stalled agents, sandbox only.
 
 pub mod detect;
 pub mod judgment;

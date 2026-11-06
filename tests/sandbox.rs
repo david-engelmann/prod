@@ -4,8 +4,8 @@
 mod common;
 
 use common::{assert_py_eq, int_of, list, text_of};
-use prod::pyjson::Value;
-use prod::sandbox::run_session;
+use westering::pyjson::Value;
+use westering::sandbox::run_session;
 
 fn session(name: &str) -> Value {
     run_session(name, None).expect("session runs")

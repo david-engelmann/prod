@@ -6,11 +6,11 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use common::{assert_py_eq, list, root, temp_dir, text_of, value, without, write_json};
-use prod::detect;
-use prod::judgment::{FixturePlayer, JudgmentSource, trusted, validate_fixture};
-use prod::ladder::build_intervention;
-use prod::pyjson::{self, Value};
-use prod::sandbox::run_session;
+use westering::detect;
+use westering::judgment::{FixturePlayer, JudgmentSource, trusted, validate_fixture};
+use westering::ladder::build_intervention;
+use westering::pyjson::{self, Value};
+use westering::sandbox::run_session;
 
 fn fixtures() -> PathBuf {
     root().join("fixtures")
