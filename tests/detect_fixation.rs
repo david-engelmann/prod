@@ -4,9 +4,9 @@
 mod common;
 
 use common::{GOAL, detections_of, ev, make_trace_full, pattern_of, span_of, text_of};
-use prod::detect;
-use prod::pyjson::Value;
-use prod::trace::Trace;
+use westering::detect;
+use westering::pyjson::Value;
+use westering::trace::Trace;
 
 fn fixation_events() -> Vec<Value> {
     vec![

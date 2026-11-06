@@ -6,10 +6,10 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 
 use common::{assert_py_eq, list, root, run_cli_at_root, temp_dir, text_of, value, without};
-use prod::judgment::{FixturePlayer, JudgmentSource, validate_fixture};
-use prod::ladder::{apply_rung, build_intervention, next_rung};
-use prod::pyjson::{self, Value};
-use prod::sandbox::{run_session, scenario_names};
+use westering::judgment::{FixturePlayer, JudgmentSource, validate_fixture};
+use westering::ladder::{apply_rung, build_intervention, next_rung};
+use westering::pyjson::{self, Value};
+use westering::sandbox::{run_session, scenario_names};
 
 const GOAL: &str = "Find the config file and report its path";
 

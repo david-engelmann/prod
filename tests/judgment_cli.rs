@@ -5,7 +5,7 @@ mod common;
 use std::path::PathBuf;
 
 use common::{root, run_cli_at_root, temp_dir, text_of};
-use prod::pyjson::{self, Value};
+use westering::pyjson::{self, Value};
 
 fn fixtures() -> PathBuf {
     root().join("fixtures")

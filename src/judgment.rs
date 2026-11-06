@@ -1,6 +1,6 @@
 //! Recorded decision model judgments, played back from fixtures.
 //!
-//! The roadmap gives prod two judgment points after a detector
+//! The roadmap gives westering two judgment points after a detector
 //! fires. Severity rates how deep a detected stall runs and
 //! answers with a score. Recovery judges the trace segment
 //! recorded after a rung landed and answers with one choice from

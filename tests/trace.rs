@@ -4,7 +4,7 @@
 mod common;
 
 use common::{GOAL, TOOLS, ev, trace_doc};
-use prod::trace::Trace;
+use westering::trace::Trace;
 
 #[test]
 fn equal_steps_are_rejected_at_load() {

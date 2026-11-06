@@ -7,10 +7,10 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 
 use common::{assert_py_eq, list, root, run_cli_at_root, text_of, value, without};
-use prod::judgment::{FixturePlayer, JudgmentSource};
-use prod::ladder::{apply_rung, build_intervention, next_rung};
-use prod::pyjson::{self, Value};
-use prod::sandbox::{run_session, scenario_names};
+use westering::judgment::{FixturePlayer, JudgmentSource};
+use westering::ladder::{apply_rung, build_intervention, next_rung};
+use westering::pyjson::{self, Value};
+use westering::sandbox::{run_session, scenario_names};
 
 const GOAL: &str = "Find the config file and report its path";
 
@@ -304,7 +304,7 @@ fn lower_rungs_tried_on_a_different_stall_do_not_unlock_the_subtask() {
 // refused as words the ladder does not carry. PR-45 makes fork
 // the fourth rung, so fork now builds over a full lower history
 // and only kill stands refused. The claim the pin carries, that
-// kill is not prod's rung to fire, is unchanged.
+// kill is not westering's rung to fire, is unchanged.
 #[test]
 fn kill_is_not_a_rung_of_this_ladder() {
     let history = history_through(&["nudge", "sharper_prompt", "smaller_subtask"]);

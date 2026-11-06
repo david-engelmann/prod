@@ -4,8 +4,8 @@
 mod common;
 
 use common::{detections_of, ev, make_trace_full, pattern_of, span_of, text_of};
-use prod::detect;
-use prod::pyjson::Value;
+use westering::detect;
+use westering::pyjson::Value;
 
 #[test]
 fn detection_carries_trace_pattern_and_evidence_span() {

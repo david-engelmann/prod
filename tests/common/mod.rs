@@ -6,8 +6,8 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use prod::pyjson::{self, Value, py_eq};
-use prod::trace::Trace;
+use westering::pyjson::{self, Value, py_eq};
+use westering::trace::Trace;
 
 pub fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -152,7 +152,7 @@ static COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub fn temp_dir(tag: &str) -> PathBuf {
     let number = COUNTER.fetch_add(1, Ordering::SeqCst);
     let dir = std::env::temp_dir().join(format!(
-        "prod-test-{}-{}-{}",
+        "westering-test-{}-{}-{}",
         std::process::id(),
         tag,
         number
@@ -168,7 +168,7 @@ pub struct CliOutput {
 }
 
 pub fn run_cli(args: &[&str], cwd: &std::path::Path) -> CliOutput {
-    let output = Command::new(env!("CARGO_BIN_EXE_prod"))
+    let output = Command::new(env!("CARGO_BIN_EXE_westering"))
         .args(args)
         .current_dir(cwd)
         .output()

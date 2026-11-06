@@ -3,8 +3,8 @@
 mod common;
 
 use common::{detections_of, ev, make_trace, pattern_of, span_of};
-use prod::detect;
-use prod::pyjson::Value;
+use westering::detect;
+use westering::pyjson::Value;
 
 fn looping(events: Vec<Value>) -> Vec<Value> {
     detections_of(&detect::detect(&make_trace(&events), 0), "looping")

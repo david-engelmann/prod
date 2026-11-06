@@ -6,8 +6,8 @@ mod common;
 use std::path::PathBuf;
 
 use common::root;
-use prod::judgment::{CONFIDENCE_THRESHOLD, FixturePlayer, validate_fixture};
-use prod::pyjson::{self, Value};
+use westering::judgment::{CONFIDENCE_THRESHOLD, FixturePlayer, validate_fixture};
+use westering::pyjson::{self, Value};
 
 fn fixtures() -> PathBuf {
     root().join("fixtures")
