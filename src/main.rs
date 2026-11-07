@@ -36,6 +36,7 @@ use westering::trace::{LoadTraceError, load_trace};
 
 #[derive(Parser)]
 #[command(
+    about = "A cattle prod for stalled agents. It escalates in stages when an agent stalls: a nudge, a sharper prompt, a smaller subtask, a fork of the work, and only then a kill.",
     subcommand_required = true,
     infer_long_args = true,
     disable_help_subcommand = true

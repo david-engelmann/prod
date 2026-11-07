@@ -10,7 +10,7 @@ Looping and tool fixation are pattern questions over a recorded trace, and the d
 
 What the model decides stays inside the ladder's fixed shape. The escalation order is a rule, nudge before sharper prompt, and a model answer never reorders it, never skips a rung, and never fires one. The rungs themselves fire on the deterministic policy the contract sets, using the model's severity score as one input among the detector's facts. A model abstention or a confidence below the threshold set in the contract leaves the policy to run on detector facts alone, which is how it ran before the model existed.
 
-What stays deterministic is the whole safety frame. Westering rescues automatically and cavalry records human rescues, and a decision model advises inside that line without blurring it. The last rung of the ladder belongs to deadman and is never reimplemented or invoked from here. Every exercise of the ladder happens against scripted test agents in a local sandbox. No code path touches a live fleet.
+What stays deterministic is the whole safety frame. Westering rescues automatically and cavalry records human rescues, and a decision model advises inside that line without blurring it. The last rung of the ladder belongs to arvin and is never reimplemented or invoked from here. Every exercise of the ladder happens against scripted test agents in a local sandbox. No code path touches a live fleet.
 
 The candidate model is Typesafe's Jev, called through the program's Typesafe connector, with the OpenAI decision model as the comparison point. Both are evaluated against the same recorded fixtures before either is adopted at a decision point, and the deterministic core of this repo never depends on a provider being reachable.
 

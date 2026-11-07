@@ -1,4 +1,4 @@
-//! westering. A graded rescue ladder for stalled agents, sandbox only.
+//! A cattle prod for stalled agents. It escalates in stages when an agent stalls: a nudge, a sharper prompt, a smaller subtask, a fork of the work, and only then a kill.
 
 pub mod detect;
 pub mod judgment;

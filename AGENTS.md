@@ -56,7 +56,7 @@ Verify claims from the thing itself. A result is read from the file on disk, the
 
 This repo is westering. Its contract lives in CONTRACT.md and that file is the spec for every slice.
 
-Boundary. Westering rescues automatically on its graded ladder. Cavalry, also owned by this chat, records the rescues only a human could make, and westering never writes that record. Deadman, owned by another chat, is the last rung both point at, and westering never reimplements that switch.
+Boundary. Westering rescues automatically on its graded ladder. Cavalry, also owned by this chat, records the rescues only a human could make, and westering never writes that record. Arvin, owned by another chat, is the last rung both point at, and westering never reimplements that switch.
 
 First slice. Stall detectors for two failure shapes, looping and tool fixation, plus the first two ladder rungs, nudge and sharper prompt, exercised only against test agents in local sandboxes and never against a live fleet.
 
