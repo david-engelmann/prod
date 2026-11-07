@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  merge_group:
 
 permissions:
   contents: read
@@ -13,5 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Run CI backstop
+        with:
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Run clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Run CI gate
         run: cargo test
