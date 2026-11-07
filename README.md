@@ -78,7 +78,7 @@ $ ./target/debug/westering detect --trace examples/fixation_trace.json
 
 ### intervene
 
-`westering intervene --scenario <name>` runs a scripted sandbox session for one of the committed scenarios and prints the session record as JSON, the whole rescue as one timeline with every rung tried and the outcome of the stall. The scenarios cover stalls that clear on each rung and a stall that never clears. With `--fixtures <dir>` the session also consults the recorded judgment fixtures in that directory at the severity and recovery points, and a trusted answer is recorded on the intervention it judges, while an abstention or an untrusted answer leaves the session exactly as it runs without the flag. The committed fixtures directory holds the recorded pairs the scenarios consult.
+`westering intervene --scenario <name>` runs a scripted sandbox session for one of the committed scenarios and prints the session record as JSON, the whole rescue as one timeline with every rung tried and the outcome of the stall. The scenarios cover stalls that clear on each rung and a stall that never clears. With `--fixtures <dir>` the session also consults the recorded judgment fixtures in that directory at the two judgment points, severity and recovery. A trusted severity answer records its score on the intervention under the name severity, and a trusted recovery answer records its choice under the name recovery. An abstention, a malformed answer, or an answer whose confidence falls below the trust threshold records nothing at that point, and at that point the session runs exactly as it runs without the flag. The committed fixtures live in the fixtures directory at the repository root, and `./target/debug/westering intervene --scenario loop-clears-on-nudge --fixtures fixtures` runs the nudge scenario against them.
 
 ```console
 $ ./target/debug/westering intervene --scenario loop-clears-on-nudge
@@ -161,7 +161,7 @@ $ ./target/debug/westering intervene --scenario loop-clears-on-nudge
 }
 ```
 
-Every command reads only the files it is handed. A trace or fixture file that is malformed or cannot be read refuses with one error line and exit code 2, and a malformed invocation exits with status 2.
+Every command reads only the files it is handed. A trace or fixture file that is malformed or cannot be read refuses with one error line and exit code 2, and a malformed invocation exits with status 2. A document nested past the reader ceiling refuses with one error line at exit status 1.
 
 ## Status
 

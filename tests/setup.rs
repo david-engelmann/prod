@@ -209,6 +209,71 @@ fn sha256_hex(data: &[u8]) -> String {
 }
 
 #[test]
+fn the_standing_boundary_statements_name_arvin() {
+    let roadmap = std::fs::read_to_string(root().join("ROADMAP.md")).unwrap();
+    assert!(
+        roadmap.contains("The last rung of the ladder belongs to arvin"),
+        "the roadmap boundary statement must name arvin"
+    );
+    let ladder = std::fs::read_to_string(root().join("src/ladder.rs")).unwrap();
+    assert!(
+        ladder.contains("kill belongs to arvin"),
+        "the ladder boundary statement must name arvin"
+    );
+    let agents = std::fs::read_to_string(root().join("AGENTS.md")).unwrap();
+    assert!(
+        agents.contains("Arvin, owned by another chat, is the last rung"),
+        "the annex boundary statement must name arvin"
+    );
+    let readme = std::fs::read_to_string(root().join("README.md")).unwrap();
+    assert!(
+        readme.contains("that rung belongs to arvin"),
+        "the README boundary statement must name arvin"
+    );
+    let contract = std::fs::read_to_string(root().join("CONTRACT.md")).unwrap();
+    assert!(
+        contract.contains("belongs to arvin alone"),
+        "the PR-45 boundary statement must name arvin"
+    );
+    for (name, text) in [
+        ("README.md", &readme),
+        ("ROADMAP.md", &roadmap),
+        ("src/ladder.rs", &ladder),
+        ("AGENTS.md", &agents),
+    ] {
+        assert!(
+            !text.to_lowercase().contains("deadman"),
+            "{name} must not name the kill rung's owner deadman"
+        );
+    }
+    let section = contract
+        .find("## Round 7 obligations")
+        .expect("the Round 7 section exists");
+    assert!(
+        !contract[..section].to_lowercase().contains("deadman"),
+        "deadman may stand only inside the Round 7 amendment record"
+    );
+}
+
+const DESCRIPTION: &str = "A cattle prod for stalled agents. It escalates in stages when an agent stalls: a nudge, a sharper prompt, a smaller subtask, a fork of the work, and only then a kill.";
+
+#[test]
+fn the_description_stands_on_every_surface() {
+    for path in [
+        "README.md",
+        "Cargo.toml",
+        "src/lib.rs",
+        "tests/cli_corpus.json",
+    ] {
+        let text = std::fs::read_to_string(root().join(path)).unwrap();
+        assert!(
+            text.contains(DESCRIPTION),
+            "the description must stand in {path}"
+        );
+    }
+}
+
+#[test]
 fn sha256_matches_a_known_vector() {
     assert_eq!(
         sha256_hex(b"abc"),
