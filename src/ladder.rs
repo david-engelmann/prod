@@ -10,7 +10,7 @@
 //! intervention enforces the same order against the session
 //! history. The ladder as implemented ends at fork. The last
 //! rung named by the contract, kill, is not implemented here,
-//! and kill belongs to deadman and is never reimplemented here.
+//! and kill belongs to arvin and is never reimplemented here.
 //!
 //! Records handed to the ladder are validated before they are
 //! read. A detection record or a history record that is missing a
